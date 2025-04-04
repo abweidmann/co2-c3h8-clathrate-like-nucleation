@@ -1,0 +1,19 @@
+integrator               = steep
+nsteps                   = 100000
+
+nstenergy                = 500
+nstlog                   = 500
+nstxout-compressed       = 1000
+
+constraint-algorithm     = lincs
+constraints              = h-bonds
+lincs-order              = 6
+
+cutoff-scheme            = Verlet
+
+coulombtype              = PME
+rcoulomb                 = 1.2
+
+vdwtype                  = PME
+rvdw                     = 1.2
+DispCorr                 = no
