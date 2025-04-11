@@ -1,3 +1,11 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Nov  6 00:14:11 2024
+
+@author: arthurweidmann
+"""
+
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import pandas as pd
@@ -8,20 +16,27 @@ from matplotlib import gridspec
 import itertools
 
 # MATPLOTLIB CONFIGURATIONS
-
 matplotlib.rcParams['font.family'] = "Arial"  # change the default font
 matplotlib.rcParams['xtick.direction'] = 'in'  # change the ticks direction
 matplotlib.rcParams['ytick.direction'] = 'in'
+matplotlib.rcParams["xtick.bottom"] = False
+
 font = FontProperties()
 font.set_family('sans-serif')  # 'serif', 'sans-serif', 'cursive', 'fantasy', or 'monospace'
 font.set_name('Arial')
 font.set_weight('bold')
-# 'ultralight', 'light', 'normal', 'regular', 'book', 'medium', 'roman', 'semibold', 'demibold',
-# 'demi', 'bold', 'heavy', 'extra bold', 'black'
 font.set_style('normal')  # 'normal', 'italic' or 'oblique'
-font.set_size('x-large')  # xx-small', 'x-small', 'small', 'medium', 'large', 'x-large', 'xx-large'
-plt.rcParams['figure.dpi'] = 300
-plt.rcParams['savefig.dpi'] = 300
+font.set_size('large')  # xx-small', 'x-small', 'small', 'medium', 'large', 'x-large', 'xx-large'
+
+font_tick = FontProperties()
+font_tick.set_family('sans-serif')  # 'serif', 'sans-serif', 'cursive', 'fantasy', or 'monospace'
+font_tick.set_name('Arial')
+font_tick.set_weight('normal')
+font_tick.set_style('normal')  # 'normal', 'italic' or 'oblique'
+font_tick.set_size('medium')  # xx-small','x-small','small','medium','large','x-large','xx-large'
+
+plt.rcParams['figure.dpi'] = 600
+plt.rcParams['savefig.dpi'] = 600
 
 def main():
 

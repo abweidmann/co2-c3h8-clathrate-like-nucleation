@@ -6,142 +6,129 @@ Created on Fri Apr 11 16:11:05 2025
 @author: arthurweidmann
 """
 
-# In this code I sum the total number of transitions and the total number of cage 
+# In this code I sum the total number of transitions and the total number of cage
 # occurrences (each frame occurrence is counted) to generate a probability of transition
 
-from matplotlib.animation import FFMpegWriter
 import matplotlib.pyplot as plt
-from tqdm import tqdm
 import pandas as pd
 import numpy as np
-import subprocess
-import os
-from mpl_toolkits import mplot3d
-import time
 from matplotlib.font_manager import FontProperties
 import matplotlib
 from matplotlib import gridspec
-import matplotlib.ticker as mtick
-import itertools
 from operator import add
 import math
 import csv
-### MATPLOTLIB CONFIGURATIONS
 
-from PIL import Image
-
+# MATPLOTLIB CONFIGURATIONS
 matplotlib.rcParams['font.family'] = "Arial"  # change the default font
 matplotlib.rcParams['xtick.direction'] = 'in'  # change the ticks direction
 matplotlib.rcParams['ytick.direction'] = 'in'
 matplotlib.rcParams["xtick.bottom"] = False
+
 font = FontProperties()
 font.set_family('sans-serif')  # 'serif', 'sans-serif', 'cursive', 'fantasy', or 'monospace'
 font.set_name('Arial')
-font.set_weight(
-    'bold')  # 'ultralight', 'light', 'normal', 'regular', 'book', 'medium', 'roman', 'semibold', 'demibold', 'demi', 'bold', 'heavy', 'extra bold', 'black'
+font.set_weight('bold')
 font.set_style('normal')  # 'normal', 'italic' or 'oblique'
 font.set_size('large')  # xx-small', 'x-small', 'small', 'medium', 'large', 'x-large', 'xx-large'
 
 font_tick = FontProperties()
 font_tick.set_family('sans-serif')  # 'serif', 'sans-serif', 'cursive', 'fantasy', or 'monospace'
 font_tick.set_name('Arial')
-font_tick.set_weight(
-    'normal')  # 'ultralight', 'light', 'normal', 'regular', 'book', 'medium', 'roman', 'semibold', 'demibold', 'demi', 'bold', 'heavy', 'extra bold', 'black'
+font_tick.set_weight('normal')
 font_tick.set_style('normal')  # 'normal', 'italic' or 'oblique'
-font_tick.set_size('medium')  # xx-small', 'x-small', 'small', 'medium', 'large', 'x-large', 'xx-large'
+font_tick.set_size('medium')  # xx-small','x-small','small','medium','large','x-large','xx-large'
 
 plt.rcParams['figure.dpi'] = 600
 plt.rcParams['savefig.dpi'] = 600
 
 
 def main():
-    
-    transition_time_limit   = 0.5 #ns
-    transition_number_limit = 4   #water molecules
-    cage_life_minimum       = 0.5 #ns
-    
-    
-    simlist = ['188','183','189']
-    complist = ['1:2','1:1','2:1']
-    
+
+    transition_time_limit = 0.5  # ns
+    transition_number_limit = 4  # water molecules
+    cage_life_minimum = 0.5  # ns
+
+    simlist = ['188', '183', '189']
+    complist = ['1:2', '1:1', '2:1']
+
     tlist183 = list(np.arange(0,3001,1))
     tlist188 = list(np.arange(0,8001,1))
     tlist189 = list(np.arange(0,3001,1))
     timelists = [tlist188, tlist183,  tlist189]
-    
+
     prdlist183 = ['1','2','3','4','5','7','8','9','10']
     prdlist188 = ['4','5','8','10']
     prdlist189 = ['1','2','4','5','8','9','10']
-    
+
     productionlists = [prdlist188, prdlist183,  prdlist189]
-    
+
     guest_list = ['Total','CO2','C3H8']
-    
+
     df_column_names = ['Time(ns)','type','0','1','2','3','4','5','6','7','8','9','10',\
                        'Empty','Occupied','LCC','N_cluster','Ncages','2nd','3rd']
-    
+
     df_transitions_columns_names = ['Initial Cage Type','Final Cage Type',  'Guest Type', 'Guest', \
                                     'Added H2O','Removed H2O','Number of Common H2O','Different H2O','Initial Time',\
                                     'Final Time','Initial Water Molecules', 'Final Water Molecules', 'Size Cage 1', \
                                     'Size Cage 2','Cage Life Time','Cage Transition',\
                                     'Transition time','Number of cages difference']
-            
+
     df_transitions_dtype = {'Initial Cage Type':str,'Final Cage Type':str,  'Guest Type':str, 'Guest':str, \
                             'Added H2O':object,'Removed H2O':object,'Number of Common H2O':str,'Different H2O':object,\
                             'Initial Time':float,'Final Time':float,'Initial Water Molecules':object, \
                             'Final Water Molecules':object,'Size Cage 1':int, \
                             'Size Cage 2':int,'Cage Transition':str,'Cage Life Time':float, \
                             'Transition time':float,'Number of cages difference':int}
-    
+
     for guest in guest_list:
         flat_list_total = []
         cages = []
-        for cage in np.arange(0,11,1):
+        for cage in np.arange(0, 11, 1):
             cages.append([])
-        for (sim, tlist, prdlist, comp) in zip(simlist, timelists, productionlists, complist):   
+        for (sim, tlist, prdlist, comp) in zip(simlist, timelists, productionlists, complist):
             transition_list_backup = []
             print(f"{sim}")
-                         
-            for prd in prdlist:    
+
+            for prd in prdlist:
                 file = f'SIM{sim}_TRAJ/SIM{sim}_{prd}_Cage_Transitions_UPDATED.csv'
                 df_transitions_test = pd.read_csv(file, header=None, skiprows=1, delim_whitespace=False, \
                                              names=df_transitions_columns_names, dtype=df_transitions_dtype)
-        
+
                 df_transitions_test['Cage Transition'] = df_transitions_test['Initial Cage Type'].astype(str) + \
                                                          u'\u2192' + \
-                                                         df_transitions_test['Final Cage Type'].astype(str) 
+                                                         df_transitions_test['Final Cage Type'].astype(str)
                 transition_list_backup.extend(df_transitions_test['Cage Transition'].unique())
-                
+
             transition_list = list(set(transition_list_backup))
             transition_list.sort()
-            #print(f'Transition_list:{transition_list}')
             transition_countlist = []
             for i,transition in enumerate(transition_list):
                 transition_countlist.append([])
-            
+
             for prd in prdlist:
                 print(prd)
                 #display(df_transitions)
                 ####Obter listas das moléculas de água sem repetições que formaram cavidades ao redor de cada guest
                 if sim == '188':
-                    
+
                     df1   = pd.read_csv(f'SIM{sim}_TRAJ/LCC_Data/SIM{sim}_{prd}_1.csv', skiprows=1, names=df_column_names)
                     df2   = pd.read_csv(f'SIM{sim}_TRAJ/LCC_Data/SIM{sim}_{prd}_2.csv', skiprows=1, names=df_column_names)
                     df3   = pd.read_csv(f'SIM{sim}_TRAJ/LCC_Data/SIM{sim}_{prd}_3.csv', skiprows=1, names=df_column_names)
                     frames = [df1, df2, df3]
                     df = pd.concat(frames)
                     df   = df.dropna(how='any', axis=0)
-                    
-        
+
+
                     file = f'SIM{sim}_TRAJ/SIM{sim}_{prd}_Cage_Transitions_UPDATED.csv'
                     df_initial = pd.read_csv(file, header=None, skiprows=1, delim_whitespace=False, \
                                                  dtype=df_transitions_dtype, names=df_transitions_columns_names)
-                    
+
                     df_initial2 = df_initial[df_initial['Transition time'] < transition_time_limit].copy()
                     df_initial22 = df_initial2[df_initial2['Cage Life Time'] >= cage_life_minimum].copy()
                     df_initial3 = df_initial22[df_initial22['Number of cages difference'] <= transition_number_limit].copy()
-    
-    
+
+
                     if guest == 'C3H8':
                         df_transitions_initial = df_initial3[df_initial3['Number of cages difference'] >= -transition_number_limit].copy()
                         df_transitions = df_transitions_initial[df_transitions_initial['Guest Type'] == 'C3H8'].copy()
@@ -150,31 +137,27 @@ def main():
                         df_transitions = df_transitions_initial[df_transitions_initial['Guest Type'] == 'CO2'].copy()
                     else:
                         df_transitions = df_initial3[df_initial3['Number of cages difference'] >= -transition_number_limit].copy()
-                        
+
                     df_transitions['Cage Transition'] = df_transitions['Initial Cage Type'].astype(str) + u'\u2192' +\
                                                             df_transitions['Final Cage Type'].astype(str)
-    
-                    
-    
-                    
+
                     time_list = list(np.arange(0,8001,500))
                 else:
-                    ##################################################################################################
                     columnnames = ['Time(ns)','type','0','1','2','3','4','5','6','7','8','9','10',\
                                    'Empty','Occupied','LCC','N_cluster','Ncages','2nd','3rd']
-        
+
                     df   = pd.read_csv(f'SIM{sim}_TRAJ/LCC_Data/SIM{sim}_{prd}.csv', skiprows=1, names=df_column_names)
                     df   = df.dropna(how='any', axis=0)
-        
-        
+
+
                     file = f'SIM{sim}_TRAJ/SIM{sim}_{prd}_Cage_Transitions_UPDATED.csv'
                     df_initial = pd.read_csv(file, header=None, skiprows=1, delim_whitespace=False, \
                                                  dtype=df_transitions_dtype, names=df_transitions_columns_names)
-        
+
                     df_initial2 = df_initial[df_initial['Transition time'] < transition_time_limit].copy()
                     df_initial22 = df_initial2[df_initial2['Cage Life Time'] >= cage_life_minimum].copy()
                     df_initial3 = df_initial22[df_initial22['Number of cages difference'] <= transition_number_limit].copy()
-    
+
                     if guest == 'C3H8':
                         df_transitions_initial = df_initial3[df_initial3['Number of cages difference'] >= -transition_number_limit].copy()
                         df_transitions = df_transitions_initial[df_transitions_initial['Guest Type'] == 'C3H8'].copy()
@@ -183,57 +166,47 @@ def main():
                         df_transitions = df_transitions_initial[df_transitions_initial['Guest Type'] == 'CO2'].copy()
                     else:
                         df_transitions = df_initial3[df_initial3['Number of cages difference'] >= -transition_number_limit].copy()
-                    
-                    
-                    ##################################################################################################
-        
+
+
                     df_transitions['Cage Transition'] = df_transitions['Initial Cage Type'].astype(str) + u'\u2192' +\
-                                                            df_transitions['Final Cage Type'].astype(str) 
+                                                            df_transitions['Final Cage Type'].astype(str)
                     time_list = list(np.arange(0,3001,500))
-                #transition_list = df_transitions['Cage Transition'].unique()
-                #transition_list.sort()
-                #transition_list_backup.extend(transition_list)
-        
-                #with tqdm(total= (len(transition_list))) as pbar:
-                
+
                 for i,transition in enumerate(transition_list):
-                    df_transitions2 = df_transitions[df_transitions['Cage Transition'] == transition] 
+                    df_transitions2 = df_transitions[df_transitions['Cage Transition'] == transition]
                     transition_countlist[i].append(df_transitions2.shape[0])
-                    #pbar.update(1)
-                    #display(transition_countlist)
-            
+
                 for cage in np.arange(0,11,1):
-                        cages[cage].append(df[f'{str(cage)}'].sum())
-                
+                    cages[cage].append(df[f'{str(cage)}'].sum())
+
             sumlist = []
             dict_list = []
-    
+
             for i,transition in enumerate(transition_list):
                 dict_list.append([])
                 init, after = transition.split('→')
-                
+
                 transition_sum = sum(transition_countlist[i])
-    
+
                 if math.isfinite(sum(cages[int(init)])) & math.isfinite(transition_sum) & (sum(cages[int(init)]) != 0):
                     dict_list[i].append((transition_sum)/sum(cages[int(init)]))
                 else:
-                    dict_list[i].append(0) 
-                
-                
+                    dict_list[i].append(0)
+
+
                 dict_list[i].append(transition_countlist[i])
-        
+
             transition_dict = dict(zip(transition_list, dict_list))
-            #print(transition_dict)
             sorted_transition = sorted(transition_dict.items(),key=lambda x:x[1], reverse=True)
             sorted_transition_dict = dict(sorted_transition)
-            
+
             ##############################################################################################
             filename = f"SIM{sim}_{guest}_Probabilities.csv"
             fields = ['Initial Cage', 'Final Cage', 'Probability']
             with open(filename, 'w') as csvfile:
                 csvwriter = csv.writer(csvfile)
                 csvwriter.writerow(fields)
-        
+
             for transition, probability in zip(sorted_transition_dict.keys(),sorted_transition_dict.values()):
                 init, after = transition.split('→')
                 row = [[init,after,str(probability[0])]]
@@ -241,7 +214,7 @@ def main():
                     csvwriter = csv.writer(csvfile)
                     csvwriter.writerows(row)
             ##############################################################################################
-            
+
             labels = list(sorted_transition_dict.keys())
             ydata = []
             transitions_t = []
@@ -250,140 +223,31 @@ def main():
                 ydata.append(ydatai)
                 transitions_ti = list(sorted_transition_dict.values())[i][1]
                 transitions_t.append(transitions_ti)
-            
+
             size = len(labels)-1
-            
-            ##############################################################################################      
-                    
-            ### Bar plots
-            list1 = [0,1,2,3,4,5,6,7,8,9,10]
-            list2 = [4,6,10]
-            green_list = []
-            red_list = []
-        
-            for i in list1:
-                for j in list2:
-                    green_string = str(i)+ u'\u2192' +str(j)
-                    green_list.append(green_string)
-                    red_string = str(j)+ u'\u2192' +str(i)
-                    red_list.append(red_string)
-        
-            middle = int(len(labels)/2)
-            color_list = []
-            for i in labels[:middle]:
-                if i in green_list:
-                    color_list.append('#449351')
-                elif i in red_list:
-                    color_list.append('#AC383A')
-                else:
-                    color_list.append('#2964A4')
-        
-            plt.figure(figsize=(10, 4))
-            gs = gridspec.GridSpec(1, 1, height_ratios=[1])
-            ax0 = plt.subplot(gs[0])      
-            x = np.arange(len(transition_list))  # the label locations
-            width = 0.35  # the width of the bars
-            #for i,transition in enumerate(transition_list):
-            rects = ax0.bar(x[:middle], ydata[:middle], width,color=color_list)
-            if guest == 'Total':
-                ax0.set_ylabel(f'Transition probability of occupied cages', fontproperties=font)
-            else:
-                ax0.set_ylabel(f'Transition probability of {guest} occupied cages', fontproperties=font)
-            ax0.set_xticks(x[:middle])
-        
-            ax0.set_xticklabels(labels[:middle], rotation=60)
-            #ax0.legend()
-            plt.title(f'System {comp} ($CO_{2}$/$C_{3}$$H_{8}$)')
-            plt.savefig(f'SIM{sim}_TRAJ/{sim}_{guest}_Cage_Transitions_1.png', format='png', \
-                        bbox_inches='tight', dpi=600, transparent=False)
-            #plt.show()
-        
-            color_list = []
-            for i in labels[middle:]:
-                if i in green_list:
-                    color_list.append('#449351')
-                elif i in red_list:
-                    color_list.append('#AC383A')
-                else:
-                    color_list.append('#2964A4')
-            plt.figure(figsize=(10, 4))
-            gs = gridspec.GridSpec(1, 1, height_ratios=[1])
-            ax0 = plt.subplot(gs[0])      
-            x = np.arange(len(transition_list))  # the label locations
-            width = 0.35  # the width of the bars
-            #for i,transition in enumerate(transition_list):
-            rects = ax0.bar(x[middle:], ydata[middle:], width,color=color_list)
-            if guest == 'Total':
-                ax0.set_ylabel(f'Transition probability of occupied cages', fontproperties=font)
-            else:
-                ax0.set_ylabel(f'Transition probability of {guest} occupied cages', fontproperties=font)
-            ax0.set_xticks(x[middle:])
-        
-            ax0.set_xticklabels(labels[middle:], rotation=60)
-            #ax0.legend()
-            plt.title(f'System {comp} ($CO_{2}$/$C_{3}$$H_{8}$)')
-            plt.savefig(f'SIM{sim}_TRAJ/{sim}__{guest}_Cage_Transitions_2.png', format='png', \
-                        bbox_inches='tight', dpi=600, transparent=False)
-            #plt.show()
-            
-            ##############################################################################################
-            ##############################################################################################
-            ##############################################################################################
-            ##############################################################################################
-            ##############################################################################################
+
             after_list = []
             flat_list = []
-        
+
             for i in [0,1,2,3,4,5,6,7,8,9,10]:
                 after_list.append([])
                 flat_list.append([])
                 for j in [0,1,2,3,4,5,6,7,8,9,10]:
                     after_list[i].append([])
-        
+
             for key, value in transition_dict.items():
                 init, after = key.split('→')
-                #print('-------------------')
-                #print(init,after)
-                
                 after_list[int(after)][int(init)].append(value[0])
-                #print(after_list[int(after)][int(init)])
-                #print('-------------------')
             for i in [0,1,2,3,4,5,6,7,8,9,10]:
-                #print(after_list[i])
                 for j in [0,1,2,3,4,5,6,7,8,9,10]:
                     if not after_list[i][j]:
                         after_list[i][j] = [0]
-            
-            #print(len(after_list))    
-            # print(after_list)
-               
+
             for i in [0,1,2,3,4,5,6,7,8,9,10]:
                 flat_list[i] = np.concatenate(after_list[i]).tolist()
-    
+
             flat_list_total.append(flat_list)
-            ### Bar plots
-            list1 = [0,1,2,3,4,5,6,7,8,9,10]
-            list2 = [4,6,10]
-            green_list = []
-            red_list = []
-        
-            for i in list1:
-                for j in list2:
-                    green_string = str(i)+ u'\u2192' +str(j)
-                    green_list.append(green_string)
-                    red_string = str(j)+ u'\u2192' +str(i)
-                    red_list.append(red_string)
-        
-            middle = int(len(labels)/2)
-            color_list = []
-            for i in labels[:middle]:
-                if i in green_list:
-                    color_list.append('#449351')
-                elif i in red_list:
-                    color_list.append('#AC383A')
-                else:
-                    color_list.append('#2964A4')
-        
+
             color0 = '#AC383A'
             color1 = '#AC383A'
             color2 = '#AC383A'
@@ -398,73 +262,28 @@ def main():
             color_list_updated1 = ['#FF5356','#FF5356','#FF5356','#FF5356','#5CC66D','khaki','#FFAA44','#3BF6FF','#409BFF','#B53EFF','#656565'  ]
             color_list_updated2 = ['#AC383A','#AC383A','#AC383A','#AC383A','#449351','gold','#DC933B','#2FC3CB','#2964A4','#892FC1', '#323232'  ]
             color_list_updated3 = ['#782729','#782729','#782729','#782729','#25512C','darkgoldenrod','#B47830','#24959B','#17395D','#5F2086','#000000']
-    
-            
+
+
             color_list_updated = [color0,color1,color2,color3,color4,color5,color6,color7,color8,color9,color10]
             labels = ['4$^{3}$5$^{6}$','4$^{3}$5$^{6}$6$^{1}$','4$^{2}$5$^{8}$', \
                           '4$^{2}$5$^{8}$6$^{1}$','5$^{12}$','4$^{1}$5$^{10}$6$^{2}$', \
                           '5$^{12}$6$^{2}$','4$^{1}$5$^{10}$6$^{3}$','5$^{12}$6$^{3}$', \
-                          '4$^{1}$5$^{10}$6$^{4}$','5$^{12}$6$^{4}$'] #'<5$^{12}$'
-            
-            '''labels = ['0','4$^{3}$5$^{6}$6$^{1}$','4$^{2}$5$^{8}$', \
-                          '< 5$^{12}$','5$^{12}$','4$^{1}$5$^{10}$6$^{2}$', \
-                          '5$^{12}$6$^{2}$','4$^{1}$5$^{10}$6$^{3}$','5$^{12}$6$^{3}$', \
-                          '4$^{1}$5$^{10}$6$^{4}$','5$^{12}$6$^{4}$']'''
-            
-            '''
-            plt.figure(figsize=(10, 4))
-            gs = gridspec.GridSpec(1, 1, height_ratios=[1])
-            ax0 = plt.subplot(gs[0])      
-            x = np.arange(11)  # the label locations
-            width = 0.35  # the width of the bars
-            #for i,transition in enumerate(transition_list):
-            bottom_sum = [0,0,0,0,0,0,0,0,0,0,0]
-            for i,j in zip([0,1,2,3,4,5,6,7,8,9,10],labels):
-                #print(f'flat_list of {i-1} and lenght {len(flat_list[i])}:{flat_list[i]}')
-                if i < 3:
-                    ax0.bar(x, flat_list[i], width,bottom=bottom_sum,color=color_list_updated[i],\
-                        edgecolor = 'white',linewidth=1)
-                elif i==3:
-                    ax0.bar(x, flat_list[i], width,bottom=bottom_sum,color=color_list_updated[i],\
-                        edgecolor = 'white',linewidth=1, label='<5$^{12}$')
-                elif i>3:
-                    ax0.bar(x, flat_list[i], width,bottom=bottom_sum,color=color_list_updated[i],\
-                        edgecolor = 'white',linewidth=1, label=j)
-                
-                bottom_sum = list(map(add, flat_list[i],bottom_sum))
-            
-            if guest == 'Total':
-                ax0.set_ylabel(f'Transition probability of \n occupied cages', fontproperties=font)
-            else:
-                ax0.set_ylabel(f'Transition probability of \n {guest} occupied cages', fontproperties=font)
-            ax0.set_xticks(x)
-        
-            ax0.set_xticklabels(labels, rotation=60)
-            ax0.legend(loc='upper center', bbox_to_anchor=(0.5, 1.35), ncols=4, \
-                       columnspacing = 0.8, fontsize= 'large')
-            
-            plt.title(f'System {comp} ($CO_{2}$/$C_{3}$$H_{8}$)')
-            plt.savefig(f'{sim}_{guest}_Cage_Transitions_Probability.png', format='png', \
-                        bbox_inches='tight', dpi=600, transparent=False)  #SIM{sim}_TRAJ/
-            plt.show()
-            '''
-        
+                          '4$^{1}$5$^{10}$6$^{4}$','5$^{12}$6$^{4}$']
+
         figure_width = 3.5
         plt.figure(figsize=(figure_width, (figure_width*(2/3))))
         plt.tight_layout()
-        params = {'mathtext.default': 'regular' }          
+        params = {'mathtext.default': 'regular' }
         plt.rcParams.update(params)
-    
+
         gs = gridspec.GridSpec(1, 1, height_ratios=[1])
-        ax0 = plt.subplot(gs[0])      
+        ax0 = plt.subplot(gs[0])
         x = np.arange(11)  # the label locations
         width = 0.25  # the width of the bars
-        #for i,transition in enumerate(transition_list):
         bottom_sum0 = [0,0,0,0,0,0,0,0,0,0,0]
         bottom_sum1 = [0,0,0,0,0,0,0,0,0,0,0]
         bottom_sum2 = [0,0,0,0,0,0,0,0,0,0,0]
         for i,j in zip([0,1,2,3,4,5,6,7,8,9,10],labels):
-            #print(f'flat_list of {i-1} and lenght {len(flat_list[i])}:{flat_list[i]}')
             if i < 3:
                 ax0.bar(x - width, flat_list_total[0][i], width,bottom=bottom_sum0,color=color_list_updated[i],\
                     edgecolor = 'white',linewidth=1)
@@ -486,11 +305,11 @@ def main():
                     edgecolor = 'white',linewidth=1)
                 ax0.bar(x + width, flat_list_total[2][i], width,bottom=bottom_sum2,color=color_list_updated[i],\
                     edgecolor = 'white',linewidth=1)
-            
+
             bottom_sum0 = list(map(add, flat_list_total[0][i],bottom_sum0))
             bottom_sum1 = list(map(add, flat_list_total[1][i],bottom_sum1))
             bottom_sum2 = list(map(add, flat_list_total[2][i],bottom_sum2))
-        
+
         if guest == 'Total':
             ax0.set_ylabel(f'Transition probability of \n occupied cages', fontproperties=font)
         elif guest == 'CO2':
@@ -498,15 +317,10 @@ def main():
         elif guest == 'C3H8':
             ax0.set_ylabel(f'Transition probability of \n $C_{3}$$H_{8}$ occupied cages', fontproperties=font)
         ax0.set_xticks(x)
-        
         ax0.set_xticklabels(labels, rotation=60,fontproperties=font_tick,ha="right",rotation_mode="anchor")
-        #ax0.set_yticklabels(ax0.get_yticklabels(), fontproperties=font_tick)
-        #ax0.legend(loc='upper center', bbox_to_anchor=(0.5, 1.35), ncols=4, \
-        #           columnspacing = 0.8, fontsize= 'large')
         plt.ylim(0, 0.00032)
         plt.gca().ticklabel_format(axis='y', style='sci', scilimits=(0, 0),useMathText=True)
-        #plt.title(f'System {comp} ($CO_{2}$/$C_{3}$$H_{8}$)')
-        #plt.gcf().set_size_inches(6.88, 3.44)
+
         plt.savefig(f'{guest}_Cage_Transitions_Probability_ALL.png', format='png', \
                     bbox_inches='tight', dpi=600, transparent=False)
         plt.savefig(f'{guest}_Cage_Transitions_Probability_ALL.pdf', format='pdf', \
@@ -514,6 +328,6 @@ def main():
         plt.savefig(f'{guest}_Cage_Transitions_Probability_ALL.tiff', format='tiff', \
                     bbox_inches='tight', dpi=600, transparent=False)
         plt.show()
-        
+
 if __name__ == '__main__':
     main()
