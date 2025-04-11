@@ -211,7 +211,7 @@ def main():
             ###############################################################################
             ################## ANALYSIS OF CAGE CONNECTIVITIES ############################
             ###############################################################################
-            
+
             print(f'Analyzing all frames of SIM{sim}_{prd}.')
             with tqdm(total=len(tlist)) as pbar:
                 for t in tlist:

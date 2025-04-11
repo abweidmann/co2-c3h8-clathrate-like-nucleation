@@ -52,34 +52,38 @@ def main():
     simlist = ['188', '183', '189']
     complist = ['1:2', '1:1', '2:1']
 
-    tlist183 = list(np.arange(0,3001,1))
-    tlist188 = list(np.arange(0,8001,1))
-    tlist189 = list(np.arange(0,3001,1))
+    tlist183 = list(np.arange(0, 3001, 1))
+    tlist188 = list(np.arange(0, 8001, 1))
+    tlist189 = list(np.arange(0, 3001, 1))
     timelists = [tlist188, tlist183,  tlist189]
 
-    prdlist183 = ['1','2','3','4','5','7','8','9','10']
-    prdlist188 = ['4','5','8','10']
-    prdlist189 = ['1','2','4','5','8','9','10']
+    prdlist183 = ['1', '2', '3', '4', '5', '7', '8', '9', '10']
+    prdlist188 = ['4', '5', '8', '10']
+    prdlist189 = ['1', '2', '4', '5', '8', '9', '10']
 
     productionlists = [prdlist188, prdlist183,  prdlist189]
 
-    guest_list = ['Total','CO2','C3H8']
+    guest_list = ['Total', 'CO2', 'C3H8']
 
-    df_column_names = ['Time(ns)','type','0','1','2','3','4','5','6','7','8','9','10',\
-                       'Empty','Occupied','LCC','N_cluster','Ncages','2nd','3rd']
+    df_column_names = ['Time(ns)', 'type', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10',
+                       'Empty', 'Occupied', 'LCC', 'N_cluster', 'Ncages', '2nd', '3rd']
 
-    df_transitions_columns_names = ['Initial Cage Type','Final Cage Type',  'Guest Type', 'Guest', \
-                                    'Added H2O','Removed H2O','Number of Common H2O','Different H2O','Initial Time',\
-                                    'Final Time','Initial Water Molecules', 'Final Water Molecules', 'Size Cage 1', \
-                                    'Size Cage 2','Cage Life Time','Cage Transition',\
-                                    'Transition time','Number of cages difference']
+    df_transitions_columns_names = ['Initial Cage Type', 'Final Cage Type', 'Guest Type', 'Guest',
+                                    'Added H2O', 'Removed H2O', 'Number of Common H2O',
+                                    'Different H2O', 'Initial Time', 'Final Time',
+                                    'Initial Water Molecules', 'Final Water Molecules',
+                                    'Size Cage 1', 'Size Cage 2', 'Cage Life Time',
+                                    'Cage Transition', 'Transition time',
+                                    'Number of cages difference']
 
-    df_transitions_dtype = {'Initial Cage Type':str,'Final Cage Type':str,  'Guest Type':str, 'Guest':str, \
-                            'Added H2O':object,'Removed H2O':object,'Number of Common H2O':str,'Different H2O':object,\
-                            'Initial Time':float,'Final Time':float,'Initial Water Molecules':object, \
-                            'Final Water Molecules':object,'Size Cage 1':int, \
-                            'Size Cage 2':int,'Cage Transition':str,'Cage Life Time':float, \
-                            'Transition time':float,'Number of cages difference':int}
+    df_transitions_dtype = {'Initial Cage Type': str, 'Final Cage Type': str, 'Guest Type': str,
+                            'Guest': str, 'Added H2O': object, 'Removed H2O': object,
+                            'Number of Common H2O': str, 'Different H2O': object,
+                            'Initial Time': float, 'Final Time': float,
+                            'Initial Water Molecules': object, 'Final Water Molecules': object,
+                            'Size Cage 1': int, 'Size Cage 2': int, 'Cage Transition': str,
+                            'Cage Life Time': float, 'Transition time': float,
+                            'Number of cages difference': int}
 
     for guest in guest_list:
         flat_list_total = []
@@ -92,42 +96,50 @@ def main():
 
             for prd in prdlist:
                 file = f'SIM{sim}_TRAJ/SIM{sim}_{prd}_Cage_Transitions_UPDATED.csv'
-                df_transitions_test = pd.read_csv(file, header=None, skiprows=1, delim_whitespace=False, \
-                                             names=df_transitions_columns_names, dtype=df_transitions_dtype)
+                df_transitions_test = pd.read_csv(file, header=None, skiprows=1,
+                                                  delim_whitespace=False,
+                                                  names=df_transitions_columns_names,
+                                                  dtype=df_transitions_dtype)
 
-                df_transitions_test['Cage Transition'] = df_transitions_test['Initial Cage Type'].astype(str) + \
-                                                         u'\u2192' + \
-                                                         df_transitions_test['Final Cage Type'].astype(str)
+                df_transitions_test['Cage Transition'] = \
+                    df_transitions_test['Initial Cage Type'].astype(str) + \
+                    u'\u2192' + \
+                    df_transitions_test['Final Cage Type'].astype(str)
+
                 transition_list_backup.extend(df_transitions_test['Cage Transition'].unique())
 
             transition_list = list(set(transition_list_backup))
             transition_list.sort()
             transition_countlist = []
-            for i,transition in enumerate(transition_list):
+            for i, transition in enumerate(transition_list):
                 transition_countlist.append([])
 
             for prd in prdlist:
                 print(prd)
-                #display(df_transitions)
-                ####Obter listas das moléculas de água sem repetições que formaram cavidades ao redor de cada guest
+
+                # Obter listas das moléculas de água sem repetições que formaram cavidades 
+                # ao redor de cada guest
                 if sim == '188':
 
-                    df1   = pd.read_csv(f'SIM{sim}_TRAJ/LCC_Data/SIM{sim}_{prd}_1.csv', skiprows=1, names=df_column_names)
-                    df2   = pd.read_csv(f'SIM{sim}_TRAJ/LCC_Data/SIM{sim}_{prd}_2.csv', skiprows=1, names=df_column_names)
-                    df3   = pd.read_csv(f'SIM{sim}_TRAJ/LCC_Data/SIM{sim}_{prd}_3.csv', skiprows=1, names=df_column_names)
+                    df1 = pd.read_csv(f'SIM{sim}_TRAJ/LCC_Data/SIM{sim}_{prd}_1.csv', skiprows=1,
+                                      names=df_column_names)
+                    df2 = pd.read_csv(f'SIM{sim}_TRAJ/LCC_Data/SIM{sim}_{prd}_2.csv', skiprows=1,
+                                      names=df_column_names)
+                    df3 = pd.read_csv(f'SIM{sim}_TRAJ/LCC_Data/SIM{sim}_{prd}_3.csv', skiprows=1,
+                                      names=df_column_names)
+
                     frames = [df1, df2, df3]
                     df = pd.concat(frames)
-                    df   = df.dropna(how='any', axis=0)
-
+                    df = df.dropna(how='any', axis=0)
 
                     file = f'SIM{sim}_TRAJ/SIM{sim}_{prd}_Cage_Transitions_UPDATED.csv'
-                    df_initial = pd.read_csv(file, header=None, skiprows=1, delim_whitespace=False, \
-                                                 dtype=df_transitions_dtype, names=df_transitions_columns_names)
+                    df_initial = pd.read_csv(file, header=None, skiprows=1, delim_whitespace=False,
+                                             dtype=df_transitions_dtype,
+                                             names=df_transitions_columns_names)
 
                     df_initial2 = df_initial[df_initial['Transition time'] < transition_time_limit].copy()
                     df_initial22 = df_initial2[df_initial2['Cage Life Time'] >= cage_life_minimum].copy()
                     df_initial3 = df_initial22[df_initial22['Number of cages difference'] <= transition_number_limit].copy()
-
 
                     if guest == 'C3H8':
                         df_transitions_initial = df_initial3[df_initial3['Number of cages difference'] >= -transition_number_limit].copy()
@@ -141,10 +153,11 @@ def main():
                     df_transitions['Cage Transition'] = df_transitions['Initial Cage Type'].astype(str) + u'\u2192' +\
                                                             df_transitions['Final Cage Type'].astype(str)
 
-                    time_list = list(np.arange(0,8001,500))
+                    time_list = list(np.arange(0, 8001, 500))
                 else:
-                    columnnames = ['Time(ns)','type','0','1','2','3','4','5','6','7','8','9','10',\
-                                   'Empty','Occupied','LCC','N_cluster','Ncages','2nd','3rd']
+                    columnnames = ['Time(ns)', 'type', '0', '1', '2', '3', '4', '5', '6', '7', '8',
+                                   '9', '10', 'Empty', 'Occupied', 'LCC', 'N_cluster', 'Ncages',
+                                   '2nd', '3rd']
 
                     df   = pd.read_csv(f'SIM{sim}_TRAJ/LCC_Data/SIM{sim}_{prd}.csv', skiprows=1, names=df_column_names)
                     df   = df.dropna(how='any', axis=0)
@@ -166,7 +179,6 @@ def main():
                         df_transitions = df_transitions_initial[df_transitions_initial['Guest Type'] == 'CO2'].copy()
                     else:
                         df_transitions = df_initial3[df_initial3['Number of cages difference'] >= -transition_number_limit].copy()
-
 
                     df_transitions['Cage Transition'] = df_transitions['Initial Cage Type'].astype(str) + u'\u2192' +\
                                                             df_transitions['Final Cage Type'].astype(str)
@@ -192,7 +204,6 @@ def main():
                     dict_list[i].append((transition_sum)/sum(cages[int(init)]))
                 else:
                     dict_list[i].append(0)
-
 
                 dict_list[i].append(transition_countlist[i])
 
@@ -252,28 +263,26 @@ def main():
             color1 = '#AC383A'
             color2 = '#AC383A'
             color3 = '#AC383A'
-            color4  = '#449351'
-            color5  = "gold"
-            color6  = '#DC933B'
-            color7  = 'cyan'
-            color8  = '#2964A4'
-            color9  = "purple"
+            color4 = '#449351'
+            color5 = "gold"
+            color6 = '#DC933B'
+            color7 = 'cyan'
+            color8 = '#2964A4'
+            color9 = "purple"
             color10 = "black"
-            color_list_updated1 = ['#FF5356','#FF5356','#FF5356','#FF5356','#5CC66D','khaki','#FFAA44','#3BF6FF','#409BFF','#B53EFF','#656565'  ]
-            color_list_updated2 = ['#AC383A','#AC383A','#AC383A','#AC383A','#449351','gold','#DC933B','#2FC3CB','#2964A4','#892FC1', '#323232'  ]
-            color_list_updated3 = ['#782729','#782729','#782729','#782729','#25512C','darkgoldenrod','#B47830','#24959B','#17395D','#5F2086','#000000']
 
+            color_list_updated = [color0, color1, color2, color3, color4, color5, color6, color7,
+                                  color8, color9, color10]
 
-            color_list_updated = [color0,color1,color2,color3,color4,color5,color6,color7,color8,color9,color10]
-            labels = ['4$^{3}$5$^{6}$','4$^{3}$5$^{6}$6$^{1}$','4$^{2}$5$^{8}$', \
-                          '4$^{2}$5$^{8}$6$^{1}$','5$^{12}$','4$^{1}$5$^{10}$6$^{2}$', \
-                          '5$^{12}$6$^{2}$','4$^{1}$5$^{10}$6$^{3}$','5$^{12}$6$^{3}$', \
-                          '4$^{1}$5$^{10}$6$^{4}$','5$^{12}$6$^{4}$']
+            labels = ['4$^{3}$5$^{6}$', '4$^{3}$5$^{6}$6$^{1}$', '4$^{2}$5$^{8}$',
+                      '4$^{2}$5$^{8}$6$^{1}$', '5$^{12}$', '4$^{1}$5$^{10}$6$^{2}$',
+                      '5$^{12}$6$^{2}$', '4$^{1}$5$^{10}$6$^{3}$', '5$^{12}$6$^{3}$',
+                      '4$^{1}$5$^{10}$6$^{4}$', '5$^{12}$6$^{4}$']
 
         figure_width = 3.5
         plt.figure(figsize=(figure_width, (figure_width*(2/3))))
         plt.tight_layout()
-        params = {'mathtext.default': 'regular' }
+        params = {'mathtext.default': 'regular'}
         plt.rcParams.update(params)
 
         gs = gridspec.GridSpec(1, 1, height_ratios=[1])
